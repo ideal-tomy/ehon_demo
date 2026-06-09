@@ -1,646 +1,746 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ものがたり工房 ｜ せかいにひとつの絵本</title>
-
-  <!-- ===== Tailwind CSS (CDN / Play) ===== -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- ===== Google Fonts ===== -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Klee+One:wght@400;600&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet" />
-
-  <!-- ===== Tailwind テーマ拡張 ===== -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            ink:        '#40324F',
-            'ink-soft': '#7A6E84',
-            paper:      '#FCF8EF',
-            'paper-2':  '#F6EEDE',
-            cream:      '#FDF7EC',
-            dusk:       '#ECE5F3',
-            marigold:   '#EFA23C',
-            'marigold-d':'#DC8B27',
-            boy:        '#3F9C8E',
-            girl:       '#E07A8B',
-          },
-          fontFamily: {
-            display: ['"Kaisei Decol"', 'serif'],
-            sans:    ['"Zen Maru Gothic"', 'sans-serif'],
-            story:   ['"Klee One"', 'cursive'],
-          },
-        },
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ものがたり工房 ｜ せかいにひとつの絵本</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Klee+One:wght@400;600&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: {
+        ink:'#40324F','ink-soft':'#7A6E84',paper:'#FCF8EF','paper-2':'#F6EEDE',
+        cream:'#FDF7EC',dusk:'#ECE5F3',marigold:'#EFA23C','marigold-d':'#DC8B27',
+        boy:'#3F9C8E',girl:'#E07A8B',
       },
-    };
-  </script>
+      fontFamily:{ display:['"Kaisei Decol"','serif'], sans:['"Zen Maru Gothic"','sans-serif'], story:['"Klee One"','cursive'] },
+    }},
+  };
+</script>
+<style>
+  body{ font-family:'Zen Maru Gothic',sans-serif; background:#EFE8F2; }
+  /* アプリ枠（スマホ体験を中央に） */
+  .app-shell{ max-width:480px; margin:0 auto; min-height:100dvh; background:#FFFDF8;
+    box-shadow:0 0 60px -20px rgba(64,50,79,.25); display:flex; flex-direction:column; position:relative; }
+  .screen-area{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fade .3s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
 
-  <style>
-    body { font-family: 'Zen Maru Gothic', sans-serif; }
+  /* 選択UI */
+  .choice{ transition:all .18s ease; background:#fff; }
+  .choice[aria-pressed="true"]{ color:#fff; background:var(--accent,#40324F); border-color:var(--accent,#40324F); }
+  .swatch{ transition:all .15s ease; position:relative; }
+  .swatch[aria-pressed="true"]{ transform:scale(1.12); box-shadow:0 0 0 3px #fff,0 0 0 5px #40324F; }
+  .swatch[aria-pressed="true"]::after{ content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#fff; font-size:.8rem; font-weight:900; text-shadow:0 1px 2px rgba(0,0,0,.5); }
 
-    /* 背景：おやすみ前の灯り */
-    .stage-bg {
-      background:
-        radial-gradient(1200px 500px at 80% -10%, #FCEFD6 0%, transparent 60%),
-        radial-gradient(900px 600px at 0% 100%, #E7E0F1 0%, transparent 55%),
-        linear-gradient(160deg, #FDF7EC 0%, #F7F1E6 45%, #EFE8F2 100%);
-    }
-    .floaty   { animation: floaty 9s ease-in-out infinite; }
-    .floaty-2 { animation: floaty 11s ease-in-out infinite; }
-    @keyframes floaty { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-14px) rotate(6deg)} }
+  /* 髪型イメージボタン */
+  .style-btn{ transition:all .15s ease; background:#fff; }
+  .style-btn[aria-pressed="true"]{ border-color:#EFA23C; background:#FDF3E2; box-shadow:inset 0 0 0 2px #EFA23C; }
 
-    /* ===== 選択UI共通 ===== */
-    .choice { transition: all .18s ease; background:#fff; }
-    .choice[aria-pressed="true"] {
-      color:#fff; background:var(--accent,#40324F);
-      border-color:var(--accent,#40324F); transform:translateY(-1px);
-      box-shadow:0 6px 14px -8px var(--accent,#40324F);
-    }
-    .swatch { transition: all .18s ease; }
-    .swatch[aria-pressed="true"] {
-      transform:scale(1.12);
-      box-shadow:0 0 0 3px #fff, 0 0 0 5px #40324F;
-    }
+  /* 本（スライダー） */
+  .viewport{ position:relative; border-radius:14px; overflow:hidden; background:#EAE0CC;
+    box-shadow:0 30px 60px -24px rgba(64,50,79,.5),0 8px 20px -10px rgba(64,50,79,.3); }
+  .track{ display:flex; transition:transform .5s cubic-bezier(.7,0,.2,1); }
+  .slide{ flex:0 0 100%; width:100%; aspect-ratio:4/3; display:flex; flex-direction:column; overflow:hidden; }
+  .page{ background-color:#FCF8EF; background-image:radial-gradient(rgba(120,95,55,.05) 1px,transparent 1px); background-size:9px 9px; padding:7%; }
+  .binding{ position:absolute; top:0; bottom:0; left:0; width:24px; z-index:8; pointer-events:none;
+    background:linear-gradient(90deg,rgba(70,48,24,.26),rgba(70,48,24,.05) 70%,transparent); }
 
-    /* ===== 本（スライダー） ===== */
-    .viewport {
-      position:relative; border-radius:14px; overflow:hidden; background:#EAE0CC;
-      box-shadow:0 36px 70px -24px rgba(64,50,79,.50), 0 10px 24px -10px rgba(64,50,79,.30);
-    }
-    .track { display:flex; transition:transform .5s cubic-bezier(.7,0,.2,1); will-change:transform; }
-    .slide { flex:0 0 100%; width:100%; aspect-ratio:4/3; display:flex; flex-direction:column; }
-    .page  {
-      background-color:#FCF8EF;
-      background-image:radial-gradient(rgba(120,95,55,.05) 1px, transparent 1px);
-      background-size:9px 9px; padding:7%;
-    }
-    /* 綴じ目の影 */
-    .binding {
-      position:absolute; top:0; bottom:0; left:0; width:28px; z-index:8; pointer-events:none;
-      background:linear-gradient(90deg, rgba(70,48,24,.28), rgba(70,48,24,.06) 70%, transparent);
-    }
+  /* 表紙 */
+  .cover-frame{ flex:1; margin:3.5%; border:2px solid rgba(255,255,255,.55); border-radius:10px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3%; padding:6%;
+    text-align:center; color:#fff; box-shadow:inset 0 0 0 6px rgba(0,0,0,.06); position:relative; overflow:hidden; }
+  .cover-eyebrow{ font-size:clamp(.5rem,1.3vw,.78rem); letter-spacing:.28em; opacity:.85; }
+  .cover-title{ font-size:clamp(1.1rem,3.2vw,2rem); font-weight:700; line-height:1.2; text-shadow:0 2px 6px rgba(0,0,0,.25); }
+  .cover-medallion{ width:38%; aspect-ratio:1; border-radius:50%; overflow:hidden; position:relative; border:4px solid #fff;
+    background:radial-gradient(circle at 50% 35%,#FFF6E6,#F3E7D2 70%,#E7D7BD); box-shadow:inset 0 2px 8px rgba(0,0,0,.12); }
+  .cover-byline{ font-size:clamp(.55rem,1.4vw,.85rem); opacity:.92; }
+  .cover-motif{ position:absolute; opacity:.85; }
 
-    /* 表紙 */
-    .cover-frame {
-      flex:1; margin:3.5%; border:2px solid rgba(255,255,255,.55); border-radius:10px;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:3%; padding:6%; text-align:center; color:#fff;
-      box-shadow: inset 0 0 0 6px rgba(0,0,0,.06);
-    }
-    .cover-eyebrow { font-size:clamp(.55rem,1.3vw,.78rem); letter-spacing:.3em; opacity:.85; }
-    .cover-title   { font-size:clamp(1.15rem,3.3vw,2rem); font-weight:700; line-height:1.25; text-shadow:0 2px 6px rgba(0,0,0,.22); }
-    .cover-title-tail { font-size:.66em; opacity:.95; }
-    .cover-medallion {
-      width:40%; aspect-ratio:1; border-radius:50%; overflow:hidden; position:relative;
-      border:4px solid #fff;
-      background: radial-gradient(circle at 50% 35%, #FFF6E6 0%, #F3E7D2 70%, #E7D7BD 100%);
-      box-shadow: inset 0 2px 8px rgba(0,0,0,.12);
-    }
-    .cover-byline { font-size:clamp(.6rem,1.4vw,.85rem); opacity:.92; }
+  .msg-slide{ align-items:center; justify-content:center; text-align:center; }
+  .msg-quote{ font-size:clamp(1.8rem,6vw,3rem); color:#EAD9A3; line-height:.6; }
+  .msg-to{ font-size:clamp(.85rem,2vw,1.1rem); color:#DC8B27; margin:2% 0 4%; }
+  .msg-body{ font-size:clamp(.8rem,1.9vw,1.05rem); line-height:2; color:#40324F; max-width:86%; white-space:pre-wrap; word-break:break-word; }
+  .msg-from{ margin-top:5%; font-size:clamp(.6rem,1.5vw,.85rem); color:#7A6E84; letter-spacing:.08em; }
+  .msg-empty{ color:#B7AEC0; font-style:italic; }
 
-    /* 巻頭メッセージ */
-    .msg-slide { align-items:center; justify-content:center; text-align:center; }
-    .msg-quote { font-size:clamp(2rem,6vw,3.4rem); color:#EAD9A3; line-height:.6; }
-    .msg-to    { font-size:clamp(.82rem,2vw,1.15rem); color:#DC8B27; margin:2% 0 4%; }
-    .msg-body  { font-size:clamp(.8rem,1.9vw,1.08rem); line-height:2; color:#40324F; max-width:84%; white-space:pre-wrap; word-break:break-word; }
-    .msg-from  { margin-top:6%; font-size:clamp(.6rem,1.4vw,.85rem); color:#7A6E84; letter-spacing:.1em; }
-    .msg-empty { color:#B7AEC0; font-style:italic; }
+  .story-slide{ flex-direction:row; align-items:center; gap:5%; }
+  .story-medallion{ width:34%; aspect-ratio:1; flex:0 0 auto; border-radius:50%; overflow:hidden; position:relative; border:3px solid #fff;
+    background:radial-gradient(circle at 50% 35%,#FFF6E6,#F3E7D2 70%,#E7D7BD); box-shadow:inset 0 2px 8px rgba(0,0,0,.12); }
+  .story-body{ font-family:'Klee One',cursive; font-size:clamp(.72rem,1.7vw,1rem); line-height:1.9; color:#40324F; word-break:break-word; }
 
-    /* エピソード */
-    .story-slide .ep-top { display:flex; align-items:center; gap:3.5%; margin-bottom:6%; }
-    .ep-emoji   { font-size:clamp(1.4rem,4.2vw,2.4rem); line-height:1; }
-    .ep-eyebrow { font-size:clamp(.55rem,1.3vw,.74rem); letter-spacing:.25em; color:var(--ep,#7A6E84); font-weight:700; }
-    .ep-title   { font-size:clamp(.95rem,2.5vw,1.45rem); color:#40324F; font-weight:700; line-height:1.3; }
-    .ep-body    { font-size:clamp(.72rem,1.7vw,1.02rem); line-height:1.95; color:#40324F; word-break:break-word; }
-    .ep-pageno  { margin-top:auto; text-align:right; font-size:clamp(.6rem,1.3vw,.8rem); color:#B6A7C0; padding-top:4%; }
+  .name-empty{ color:#B7AEC0; border-bottom:2px dashed #CFC6DA; padding:0 .1em; }
 
-    /* 名前スロット未入力時 */
-    .name-empty { color:#B7AEC0; border-bottom:2px dashed #CFC6DA; padding:0 .12em; }
+  /* アバターSVG 出し分け */
+  .avatar .outfit-boy,.avatar .outfit-girl,.avatar .hair-back,.avatar .hair-curly{ display:none; }
+  .avatar.is-boy .outfit-boy{ display:block; }
+  .avatar.is-girl .outfit-girl{ display:block; }
+  .avatar.style-long .hair-back{ display:block; }
+  .avatar.style-curly .hair-curly{ display:block; }
+  .avatar.style-curly .hair-fringe{ display:none; }
 
-    /* キャラSVG：性別×髪型 出し分け（色はCSS変数で差替え） */
-    .avatar .outfit-boy, .avatar .outfit-girl, .avatar .hair-back { display:none; }
-    .avatar.is-boy  .outfit-boy  { display:block; }
-    .avatar.is-girl .outfit-girl { display:block; }
-    .avatar.hair-long .hair-back { display:block; }
+  .pop{ animation:pop .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pop{ 0%{transform:scale(.86)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
 
-    .pop { animation: pop .45s cubic-bezier(.34,1.56,.64,1); }
-    @keyframes pop { 0%{transform:scale(.86)} 60%{transform:scale(1.05)} 100%{transform:scale(1)} }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#D8CEDE; transition:all .2s; }
+  .dot-on{ background:#EFA23C; transform:scale(1.35); }
 
-    /* ページ位置ドット */
-    .dot { width:8px; height:8px; border-radius:50%; background:#D8CEDE; transition:all .2s; }
-    .dot-on { background:#EFA23C; transform:scale(1.35); }
+  .cover-opt{ position:relative; border-radius:12px; overflow:hidden; aspect-ratio:4/3; transition:all .18s ease; }
+  .cover-opt[aria-pressed="true"]{ box-shadow:0 0 0 3px #fff,0 0 0 6px #40324F; }
+  .cover-opt[aria-pressed="true"] .cover-check{ display:grid; }
+  .cover-check{ display:none; position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%;
+    background:#40324F; color:#fff; place-items:center; font-size:.8rem; z-index:9; }
+  .price-tag{ position:absolute; top:6px; left:6px; background:#EFA23C; color:#fff; font-weight:700;
+    font-size:.7rem; padding:2px 8px; border-radius:99px; z-index:9; box-shadow:0 2px 4px rgba(0,0,0,.2); }
 
-    @media (prefers-reduced-motion: reduce) {
-      .floaty, .floaty-2, .pop { animation:none !important; }
-      .track { transition:none; }
-      .choice, .swatch { transition:none; }
-      html { scroll-behavior:auto; }
-    }
-  </style>
+  @media (prefers-reduced-motion: reduce){
+    .pop{ animation:none!important; } .track,.choice,.swatch,.cover-opt{ transition:none; }
+    .screen.active{ animation:none; } html{ scroll-behavior:auto; }
+  }
+</style>
 </head>
+<body>
+<div class="app-shell">
 
-<body class="stage-bg min-h-screen text-ink antialiased">
-
-  <!-- 背景の浮遊装飾 -->
-  <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden -z-0">
-    <svg class="floaty absolute top-20 left-[6%] w-10 opacity-60" viewBox="0 0 24 24" fill="#EFA23C"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8z"/></svg>
-    <svg class="floaty-2 absolute top-44 right-[10%] w-7 opacity-50" viewBox="0 0 24 24" fill="#E07A8B"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8z"/></svg>
-    <svg class="floaty absolute bottom-24 left-[14%] w-6 opacity-40" viewBox="0 0 24 24" fill="#3F9C8E"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8z"/></svg>
-  </div>
-
-  <!-- ヘッダー -->
-  <header class="relative z-10 mx-auto max-w-7xl px-5 pt-6 pb-2 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <span class="grid place-items-center w-10 h-10 rounded-2xl bg-marigold text-white shadow-sm rotate-[-6deg]">
-        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg>
-      </span>
-      <div class="leading-tight">
-        <p class="font-display text-xl font-bold tracking-wide">ものがたり工房</p>
-        <p class="text-[11px] text-ink-soft tracking-[.18em]">STORY ATELIER</p>
+  <!-- ===== トップバー ===== -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-paper-2">
+    <div class="flex items-center justify-between px-4 h-14">
+      <button id="menuBtn" class="text-ink-soft" aria-label="メニュー">
+        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <button id="homeBtn" class="flex items-center gap-2" aria-label="ホーム">
+        <span class="grid place-items-center w-8 h-8 rounded-xl bg-marigold text-white rotate-[-6deg]">
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><path d="M3 7l4 4 5-7 5 7 4-4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
+        </span>
+        <span class="font-display font-bold tracking-wide">ものがたり工房</span>
+      </button>
+      <div class="flex items-center gap-3 text-ink-soft">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
       </div>
     </div>
-    <p class="hidden sm:block font-display text-sm text-ink-soft">せかいに ひとつの 絵本を。</p>
+    <!-- ウィザード用バー -->
+    <div id="wizardBar" class="hidden px-4 py-2 border-t border-paper-2">
+      <div class="flex items-center justify-between mb-2">
+        <button id="cancelLink" class="text-sm text-ink-soft hover:text-ink">‹ もどる</button>
+        <span id="stepLabel" class="text-[11px] text-ink-soft">ステップ 1 / 7</span>
+      </div>
+      <div class="h-1.5 rounded-full bg-paper-2 overflow-hidden">
+        <div id="progressFill" class="h-full bg-marigold transition-all duration-300" style="width:14%"></div>
+      </div>
+    </div>
   </header>
 
-  <main class="relative z-10 mx-auto max-w-7xl px-4 sm:px-5 pb-12
-               flex flex-col gap-5 lg:grid lg:grid-cols-5 lg:items-start lg:gap-7">
+  <!-- ===== 画面エリア ===== -->
+  <main class="screen-area" id="screenArea">
 
-    <!-- ───────── プレビュー（右／スマホは上・追従） ───────── -->
-    <section class="order-1 lg:order-2 lg:col-span-3 sticky top-2 lg:static z-20">
-      <div class="rounded-[26px] bg-white/55 backdrop-blur-md border border-white/70 shadow-sm p-4 sm:p-7">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-display text-sm sm:text-base text-ink">できあがりプレビュー</p>
-          <span class="text-[11px] text-ink-soft flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-boy animate-pulse"></span>入力にあわせて更新中
-          </span>
+    <!-- 0) カタログ -->
+    <section id="screen-catalog" class="screen active">
+      <div class="px-4 pt-5 pb-3 flex items-end justify-between">
+        <div>
+          <h1 class="font-display text-2xl font-bold">えほんを えらぶ</h1>
+          <p class="text-sm text-ink-soft mt-0.5">お子さまが主人公になる、名入れ絵本。</p>
         </div>
+        <span class="text-sm text-ink-soft">全 3 冊</span>
+      </div>
+      <div id="catalogGrid" class="px-4 grid grid-cols-2 gap-3 pb-8"></div>
+    </section>
 
-        <!-- 本体 -->
-        <div class="mx-auto max-w-[460px]">
+    <!-- 1) 商品ページ -->
+    <section id="screen-product" class="screen">
+      <div class="px-4 pt-5">
+        <div class="rounded-2xl p-3" style="background:linear-gradient(160deg,#FCEFD6,#EFE7F4)">
+          <div id="productCover" class="mx-auto max-w-[300px]">
+            <div class="viewport"><div class="track"><div class="slide" id="productCoverSlide"></div></div></div>
+          </div>
+        </div>
+        <h2 id="productTitle" class="font-display text-2xl font-bold mt-5"></h2>
+        <p id="productAge" class="text-sm text-ink-soft mt-1"></p>
+        <p id="productDesc" class="text-[15px] leading-relaxed mt-3"></p>
+        <div class="mt-4 rounded-xl bg-cream border border-paper-2 p-3 flex items-center justify-between">
+          <span class="text-sm text-ink-soft">価格</span>
+          <span class="font-display text-xl font-bold">から ¥3,800<span class="text-xs font-sans font-normal text-ink-soft">（税込）</span></span>
+        </div>
+        <p class="text-[11px] text-ink-soft mt-3">🎁 ギフトラッピング対応　🚚 送料無料・約2週間でお届け</p>
+        <div class="h-4"></div>
+      </div>
+    </section>
+
+    <!-- 2) 名前 -->
+    <section id="screen-name" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold">おなまえを おしえてね</h2>
+        <p class="text-sm text-ink-soft mt-1">絵本の主人公になる、お子さまのお名前です。</p>
+        <input id="nameInput" type="text" maxlength="10" placeholder="例：りの"
+               class="w-full mt-6 rounded-xl border-2 border-paper-2 bg-cream/60 px-4 py-4 text-xl
+                      focus:border-marigold focus:ring-2 focus:ring-marigold/30 outline-none transition" />
+        <p class="text-sm text-ink-soft mt-3">ひょうしは「<span class="j-name font-bold text-marigold-d"></span><span id="nameTail" class="font-bold text-marigold-d"></span>」になります。</p>
+      </div>
+    </section>
+
+    <!-- 3) 性別 -->
+    <section id="screen-gender" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold"><span class="j-name"></span>は どっち？</h2>
+        <p class="text-sm text-ink-soft mt-1">主人公のタイプをえらんでください。</p>
+        <div class="grid grid-cols-2 gap-3 mt-6">
+          <button class="choice rounded-2xl border-2 border-boy/40 py-8 font-bold text-lg flex flex-col items-center gap-2 text-boy"
+                  data-group="gender" data-value="boy" aria-pressed="true" style="--accent:#3F9C8E"><span class="text-4xl">👦</span>男の子</button>
+          <button class="choice rounded-2xl border-2 border-girl/40 py-8 font-bold text-lg flex flex-col items-center gap-2 text-girl"
+                  data-group="gender" data-value="girl" aria-pressed="false" style="--accent:#E07A8B"><span class="text-4xl">👧</span>女の子</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4) アバター -->
+    <section id="screen-avatar" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold"><span class="j-name"></span>の すがたを つくろう</h2>
+        <p class="text-sm text-ink-soft mt-1">肌・髪・目の色まで、自由にカスタマイズ。</p>
+        <div id="avatarBig" class="mx-auto mt-4 w-40 h-40 rounded-full overflow-hidden relative border-4 border-white shadow-lg"
+             style="background:radial-gradient(circle at 50% 35%,#FFF6E6,#F3E7D2 70%,#E7D7BD)"></div>
+
+        <div class="mt-6">
+          <p class="font-bold text-sm mb-2">髪型</p>
+          <div id="styleButtons" class="grid grid-cols-3 gap-2"></div>
+        </div>
+        <div class="mt-5"><p class="font-bold text-sm mb-2">肌の色</p><div id="skinSwatches" class="flex flex-wrap gap-2.5"></div></div>
+        <div class="mt-5"><p class="font-bold text-sm mb-2">髪の色</p><div id="hairSwatches" class="flex flex-wrap gap-2.5"></div></div>
+        <div class="mt-5"><p class="font-bold text-sm mb-2">目の色</p><div id="eyeSwatches" class="flex flex-wrap gap-2.5"></div></div>
+        <div class="h-4"></div>
+      </div>
+    </section>
+
+    <!-- 5) 表紙の色・デザイン -->
+    <section id="screen-cover" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold">何色が好きですか？</h2>
+        <p class="text-sm text-ink-soft mt-1">仕上げに表紙カラーをお選びください。</p>
+        <div id="coverOptions" class="grid grid-cols-2 gap-3 mt-5"></div>
+        <p class="text-[11px] text-ink-soft mt-3">※ 標準カラー以外は +¥450 でお選びいただけます。</p>
+        <div class="h-4"></div>
+      </div>
+    </section>
+
+    <!-- 6) 全ページ確認 -->
+    <section id="screen-review" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold">全ページの確認</h2>
+        <p class="text-sm text-ink-soft mt-1">印刷イメージをご確認ください。</p>
+        <div class="mx-auto max-w-[360px] mt-4">
           <div id="viewport" class="viewport" tabindex="0" aria-label="絵本プレビュー（左右キーでめくれます）">
             <div class="binding"></div>
-            <div id="track" class="track"><!-- JSがページを生成 --></div>
+            <div id="track" class="track"></div>
           </div>
-
-          <!-- ナビゲーション -->
-          <div class="mt-4 flex items-center justify-between gap-3">
-            <button id="prevBtn" type="button"
-                    class="rounded-full bg-white border-2 border-paper-2 px-4 py-2 text-sm font-bold text-ink
-                           hover:border-marigold hover:text-marigold-d disabled:opacity-35 disabled:hover:border-paper-2
-                           disabled:hover:text-ink transition active:scale-95">◀ 前のページ</button>
+          <div class="mt-3 flex items-center justify-between gap-2">
+            <button id="prevBtn" class="rounded-full bg-white border-2 border-paper-2 px-3 py-2 text-sm font-bold text-ink whitespace-nowrap disabled:opacity-35 active:scale-95 transition"><span aria-hidden="true">◀</span><span class="sr-only">前</span></button>
             <span id="pageIndicator" class="font-display text-sm text-ink-soft whitespace-nowrap">1 / 5 ページ</span>
-            <button id="nextBtn" type="button"
-                    class="rounded-full bg-white border-2 border-paper-2 px-4 py-2 text-sm font-bold text-ink
-                           hover:border-marigold hover:text-marigold-d disabled:opacity-35 disabled:hover:border-paper-2
-                           disabled:hover:text-ink transition active:scale-95">次のページ ▶</button>
+            <button id="nextBtn" class="rounded-full bg-white border-2 border-paper-2 px-3 py-2 text-sm font-bold text-ink whitespace-nowrap disabled:opacity-35 active:scale-95 transition"><span aria-hidden="true">▶</span><span class="sr-only">次</span></button>
           </div>
           <div id="dots" class="mt-3 flex items-center justify-center gap-2"></div>
         </div>
+        <div class="h-4"></div>
       </div>
     </section>
 
-    <!-- ───────── カスタマイズ入力（左／スマホは下） ───────── -->
-    <section class="order-2 lg:order-1 lg:col-span-2">
-      <div class="rounded-[26px] bg-white/80 backdrop-blur border border-white shadow-sm p-5 sm:p-7">
-        <h1 class="font-display text-2xl font-bold mb-1">あなただけの絵本をつくる</h1>
-        <p class="text-sm text-ink-soft mb-6">選ぶたびに、右のプレビューへすぐ反映されます。</p>
-
-        <!-- 名前 -->
-        <div class="mb-6">
-          <label for="nameInput" class="block font-bold text-sm mb-2">主人公のなまえ</label>
-          <input id="nameInput" type="text" maxlength="10" placeholder="例：たろう"
-                 class="w-full rounded-xl border-2 border-paper-2 bg-cream/60 px-4 py-3 text-lg
-                        focus:border-marigold focus:ring-2 focus:ring-marigold/30 outline-none transition" />
-        </div>
-
-        <!-- 性別 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">キャラクター</span>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" class="choice rounded-xl border-2 border-boy/40 py-3 font-bold flex items-center justify-center gap-2"
-                    data-group="gender" data-value="boy" aria-pressed="true" style="--accent:#3F9C8E"><span>👦</span> 男の子</button>
-            <button type="button" class="choice rounded-xl border-2 border-girl/40 py-3 font-bold flex items-center justify-center gap-2 text-girl"
-                    data-group="gender" data-value="girl" aria-pressed="false" style="--accent:#E07A8B"><span>👧</span> 女の子</button>
-          </div>
-        </div>
-
-        <!-- 髪型 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">髪型</span>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" class="choice rounded-xl border-2 border-ink/15 py-3 font-bold text-ink"
-                    data-group="hair" data-value="short" aria-pressed="true" style="--accent:#40324F">ショート</button>
-            <button type="button" class="choice rounded-xl border-2 border-ink/15 py-3 font-bold text-ink"
-                    data-group="hair" data-value="long" aria-pressed="false" style="--accent:#40324F">ロング</button>
-          </div>
-        </div>
-
-        <!-- 肌の色 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">肌の色</span>
-          <div class="flex items-center gap-5">
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="skin" data-value="light" aria-pressed="true" style="background:#F6CBA0" aria-label="ライト"></button>
-              <span class="text-[11px] text-ink-soft">ライト</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="skin" data-value="medium" aria-pressed="false" style="background:#D99A6C" aria-label="ミディアム"></button>
-              <span class="text-[11px] text-ink-soft">ミディアム</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="skin" data-value="dark" aria-pressed="false" style="background:#A56A47" aria-label="ダーク"></button>
-              <span class="text-[11px] text-ink-soft">ダーク</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 髪の色 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">髪の色</span>
-          <div class="flex items-center gap-5">
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="hairColor" data-value="black" aria-pressed="true" style="background:#2B2A2E" aria-label="ブラック"></button>
-              <span class="text-[11px] text-ink-soft">ブラック</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="hairColor" data-value="brown" aria-pressed="false" style="background:#6B4A2B" aria-label="ブラウン"></button>
-              <span class="text-[11px] text-ink-soft">ブラウン</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-full border border-black/10" data-group="hairColor" data-value="gold" aria-pressed="false" style="background:#D9A441" aria-label="ゴールド"></button>
-              <span class="text-[11px] text-ink-soft">ゴールド</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 表紙の色 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">表紙の色</span>
-          <div class="flex items-center gap-5">
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-xl border border-black/10" data-group="cover" data-value="red" aria-pressed="true" style="background:#C24B43" aria-label="レッド"></button>
-              <span class="text-[11px] text-ink-soft">レッド</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-xl border border-black/10" data-group="cover" data-value="blue" aria-pressed="false" style="background:#3E6FA8" aria-label="ブルー"></button>
-              <span class="text-[11px] text-ink-soft">ブルー</span>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <button type="button" class="swatch w-11 h-11 rounded-xl border border-black/10" data-group="cover" data-value="green" aria-pressed="false" style="background:#4C8C5A" aria-label="グリーン"></button>
-              <span class="text-[11px] text-ink-soft">グリーン</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- メッセージ -->
-        <div class="mb-6">
-          <label for="msgInput" class="block font-bold text-sm mb-2">おくる人からのメッセージ</label>
-          <textarea id="msgInput" rows="3" maxlength="80" placeholder="例：おたんじょうび おめでとう！すてきな1年になりますように。"
-                    class="w-full rounded-xl border-2 border-paper-2 bg-cream/60 px-4 py-3 text-sm leading-relaxed
-                           focus:border-marigold focus:ring-2 focus:ring-marigold/30 outline-none transition resize-none"></textarea>
-          <p class="text-[11px] text-ink-soft mt-1">※2ページ目（巻頭メッセージ）に印刷されます</p>
-        </div>
-
-        <!-- エピソード選択 -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">エピソードを えらぶ <span class="font-normal text-ink-soft text-[11px]">（複数えらべます）</span></span>
-          <div class="flex flex-col gap-2">
-            <button type="button" class="choice ep-chip flex items-center gap-3 rounded-xl border-2 border-paper-2 px-4 py-3 text-left font-bold text-ink"
-                    data-ep="lion" aria-pressed="true" style="--accent:#E8A33C">
-              <span class="text-xl">🦁</span><span>ライオンと 勇気の 冒険</span>
-              <span class="ml-auto text-xs check-mark">✓</span>
-            </button>
-            <button type="button" class="choice ep-chip flex items-center gap-3 rounded-xl border-2 border-paper-2 px-4 py-3 text-left font-bold text-ink"
-                    data-ep="dolphin" aria-pressed="true" style="--accent:#3F9C8E">
-              <span class="text-xl">🐬</span><span>イルカと 優しさの 海</span>
-              <span class="ml-auto text-xs check-mark">✓</span>
-            </button>
-            <button type="button" class="choice ep-chip flex items-center gap-3 rounded-xl border-2 border-paper-2 px-4 py-3 text-left font-bold text-ink"
-                    data-ep="owl" aria-pressed="true" style="--accent:#7A6E84">
-              <span class="text-xl">🦉</span><span>フクロウと 知恵の 森</span>
-              <span class="ml-auto text-xs check-mark">✓</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 本の仕様（装丁） -->
-        <div class="mb-6">
-          <span class="block font-bold text-sm mb-2">本の仕様</span>
-          <div class="grid grid-cols-2 gap-2 mb-2">
-            <button type="button" class="choice rounded-xl border-2 border-paper-2 py-3 px-2 text-center font-bold text-ink leading-tight"
-                    data-group="coverType" data-value="soft" aria-pressed="true" style="--accent:#40324F">
-              ソフトカバー<span class="block text-[11px] font-normal mt-0.5">標準</span>
-            </button>
-            <button type="button" class="choice rounded-xl border-2 border-paper-2 py-3 px-2 text-center font-bold text-ink leading-tight"
-                    data-group="coverType" data-value="hard" aria-pressed="false" style="--accent:#40324F">
-              ハードカバー<span class="block text-[11px] font-normal mt-0.5">+¥1,200</span>
-            </button>
-          </div>
-          <button type="button" class="choice w-full rounded-xl border-2 border-paper-2 py-3 px-4 font-bold text-ink flex items-center justify-between"
-                  data-toggle="gift" aria-pressed="false" style="--accent:#EFA23C">
-            <span>🎁 ギフトラッピング</span>
-            <span class="text-sm font-normal">+¥500</span>
-          </button>
-        </div>
-
-        <!-- 合計金額 & 購入 -->
-        <div class="rounded-2xl bg-cream/70 border border-paper-2 p-4">
-          <div class="flex items-end justify-between mb-1">
-            <p class="text-sm text-ink-soft pb-1">合計（税込）</p>
-            <p id="totalPrice" class="font-display text-3xl font-bold text-ink">¥3,800</p>
-          </div>
-          <p id="priceNote" class="text-[11px] text-ink-soft text-right mb-3">ソフトカバー・ラッピングなし</p>
-          <button id="buyButton" type="button"
-                  class="w-full rounded-xl bg-marigold hover:bg-marigold-d text-white font-bold text-lg py-4
-                         shadow-md hover:shadow-lg active:scale-[.99] transition flex items-center justify-center gap-2">
-            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-            この絵本を購入する
-          </button>
-          <p class="text-[11px] text-ink-soft text-center mt-2">🚚 送料無料・約2週間でお届け</p>
-        </div>
+    <!-- 7) 作者 -->
+    <section id="screen-author" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold">この絵本を作ったのは誰ですか？</h2>
+        <p class="text-sm text-ink-soft mt-1">贈り主のお名前も絵本に印刷されます。</p>
+        <input id="authorInput" type="text" maxlength="20" placeholder="例：ママ より"
+               class="w-full mt-6 rounded-xl border-2 border-paper-2 bg-cream/60 px-4 py-4 text-lg
+                      focus:border-marigold focus:ring-2 focus:ring-marigold/30 outline-none transition" />
       </div>
     </section>
+
+    <!-- 8) メッセージ -->
+    <section id="screen-message" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold"><span class="j-name"></span> へ メッセージを書く</h2>
+        <p class="text-sm text-ink-soft mt-1">最初のページに綴るメッセージです。印刷前にプレビューでご確認ください。</p>
+        <textarea id="msgInput" rows="6" maxlength="200" placeholder="例：おたんじょうび おめでとう！すてきな1年になりますように。"
+                  class="w-full mt-5 rounded-xl border-2 border-paper-2 bg-cream/60 px-4 py-3 text-[15px] leading-relaxed
+                         focus:border-marigold focus:ring-2 focus:ring-marigold/30 outline-none transition resize-none"></textarea>
+        <p class="text-right text-[12px] text-ink-soft mt-1">残り <span id="msgRemain">200</span> 文字</p>
+      </div>
+    </section>
+
+    <!-- 9) 確認・購入 -->
+    <section id="screen-confirm" class="screen">
+      <div class="px-5 pt-6">
+        <h2 class="font-display text-2xl font-bold">ご注文内容の確認</h2>
+        <div class="mt-4 flex gap-4 items-center">
+          <div class="w-28 shrink-0"><div class="viewport"><div class="track"><div class="slide" id="confirmCoverSlide"></div></div></div></div>
+          <div>
+            <p id="confirmTitle" class="font-display font-bold text-lg leading-tight"></p>
+            <p id="confirmSummary" class="text-sm text-ink-soft mt-1 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <p class="font-bold text-sm mt-6 mb-2">本の仕様</p>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <button class="choice rounded-xl border-2 border-paper-2 py-3 px-2 text-center font-bold text-ink leading-tight text-sm"
+                  data-group="coverType" data-value="soft" aria-pressed="true" style="--accent:#40324F">ソフトカバー<span class="block text-[11px] font-normal mt-0.5">標準</span></button>
+          <button class="choice rounded-xl border-2 border-paper-2 py-3 px-2 text-center font-bold text-ink leading-tight text-sm"
+                  data-group="coverType" data-value="hard" aria-pressed="false" style="--accent:#40324F">ハードカバー<span class="block text-[11px] font-normal mt-0.5">+¥1,200</span></button>
+        </div>
+        <button class="choice w-full rounded-xl border-2 border-paper-2 py-3 px-4 font-bold text-ink flex items-center justify-between"
+                data-toggle="gift" aria-pressed="false" style="--accent:#EFA23C"><span>🎁 ギフトラッピング</span><span class="text-sm font-normal">+¥500</span></button>
+
+        <div class="mt-5 rounded-2xl bg-cream border border-paper-2 p-4 space-y-1.5 text-sm">
+          <div class="flex justify-between"><span class="text-ink-soft">本体（ソフトカバー）</span><span>¥3,800</span></div>
+          <div id="rowCover" class="flex justify-between"><span class="text-ink-soft">表紙カラー</span><span>¥0</span></div>
+          <div id="rowHard" class="flex justify-between"><span class="text-ink-soft">ハードカバー</span><span>¥0</span></div>
+          <div id="rowGift" class="flex justify-between"><span class="text-ink-soft">ギフトラッピング</span><span>¥0</span></div>
+          <div class="border-t border-paper-2 pt-2 mt-2 flex justify-between items-end">
+            <span class="font-bold">合計（税込）</span><span id="totalPrice" class="font-display text-2xl font-bold">¥3,800</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-ink-soft text-center mt-3">🚚 送料無料・約2週間でお届け</p>
+        <div class="h-4"></div>
+      </div>
+    </section>
+
   </main>
 
-  <footer class="relative z-10 text-center text-[11px] text-ink-soft pb-8">
-    © ものがたり工房 — プロトタイプ（デモ）
+  <!-- ===== 下部アクションバー ===== -->
+  <footer id="actionbar" class="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-paper-2 px-4 py-3">
+    <button id="ctaButton" class="w-full rounded-xl bg-ink text-white font-bold text-lg py-4 shadow-md active:scale-[.99] transition">次へ進む</button>
   </footer>
+</div>
 
-  <!-- ===== JavaScript ===== -->
-  <script>
-  (function () {
-    const $ = (id) => document.getElementById(id);
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
 
-    /* ---------- 状態 ---------- */
-    const state = {
-      name: '', message: '',
-      gender: 'boy', hair: 'short',
-      skin: 'light', hairColor: 'black', cover: 'red',
-      episodes: { lion: true, dolphin: true, owl: true },
-      coverType: 'soft', gift: false,
-      page: 0,
-    };
+  /* ---------- データ ---------- */
+  const SKIN = [
+    {v:'s1',c:'#FCE0C4'},{v:'s2',c:'#F6CBA0'},{v:'s3',c:'#EAB079'},{v:'s4',c:'#D99A6C'},
+    {v:'s5',c:'#C07E50'},{v:'s6',c:'#A56A47'},{v:'s7',c:'#8A5436'},{v:'s8',c:'#5E3A24'},
+  ];
+  const HAIR = [
+    {v:'h1',c:'#1F1E22'},{v:'h2',c:'#3A2A1C'},{v:'h3',c:'#6B4A2B'},{v:'h4',c:'#A8432A'},
+    {v:'h5',c:'#D9A441'},{v:'h6',c:'#E7C982'},{v:'h7',c:'#C9C3CB'},{v:'h8',c:'#D77BA0'},
+  ];
+  const EYE = [
+    {v:'e1',c:'#3A2A1C'},{v:'e2',c:'#6B4A2B'},{v:'e3',c:'#8A6A3A'},
+    {v:'e4',c:'#4C8C5A'},{v:'e5',c:'#3E6FA8'},{v:'e6',c:'#7E8A93'},
+  ];
+  const COVERS = [
+    {key:'midnight',label:'ミッドナイト',c:'#34306B',price:0},
+    {key:'ocean',   label:'オーシャン', c:'#3E6FA8',price:450},
+    {key:'sunshine',label:'サンシャイン',c:'#E8B23C',price:450},
+    {key:'meadow',  label:'メドウ',     c:'#4C8C5A',price:450},
+  ];
+  const COVERMAP = {}; COVERS.forEach(c=>COVERMAP[c.key]=c);
 
-    /* ---------- 色・データ ---------- */
-    const SKIN  = { light:'#F6CBA0', medium:'#D99A6C', dark:'#A56A47' };
-    const HAIRC = { black:'#2B2A2E', brown:'#6B4A2B', gold:'#D9A441' };
-    const COVER = { red:'#C24B43',  blue:'#3E6FA8',  green:'#4C8C5A' };
+  const BOOKS = {
+    dino: {
+      catalogTitle:'きょうりゅうに なれるかな', sub:'お子さまが恐竜に大変身。自分らしさを大切にできる絵本。',
+      age:'対象年齢 2〜5歳', theme:'#34306B', motif:['🦕','🦖','🌋'],
+      eyebrow:'わたしは きょうりゅう', titleHtml:'<span class="j-name"></span>サウルス',
+      desc:'ガオー！恐竜が大好きなお子さまのための名入れ絵本。お子さまの名前が6種類の恐竜ネームに大変身。ゆかいな恐竜たちと遊びながら、自分らしくいることの大切さを学べます。',
+      pages:[
+        'むかしむかし、きょうりゅうの くにに {name}という げんきな こが いました。',
+        'あさ、{name}は おおきな こえで ごあいさつ。「おはよう、ガオー！」',
+        'ともだちの トリケラと はらっぱで かけっこ。{name}は かぜの ように はやい！',
+        'かみなりの ひ、みんなを まもったのは ゆうかんな {name}でした。',
+        'つよくても やさしい {name}。なかまは みんな {name}が だいすき。',
+        'じぶんらしく いることが いちばん すてき。きょうも {name}は えがおです。',
+      ],
+    },
+    space: {
+      catalogTitle:'うちゅうへ ひとっとび', sub:'夜空のかなたへ。勇気をテーマにした冒険物語。',
+      age:'対象年齢 3〜7歳', theme:'#3E6FA8', motif:['🚀','⭐','🪐'],
+      eyebrow:'きらきら うちゅうの たび', titleHtml:'うちゅうひこうし<br><span class="j-name"></span>',
+      desc:'ある夜、お子さまの名前を冠したロケットが出発！星をめぐる旅のなかで、ちいさな勇気が大きな発見につながる――宇宙を舞台にした名入れ絵本です。',
+      pages:[
+        'ある よる、ロケットに のりこんだ {name}は、ほしぞらへ とびたちました。',
+        'まどの そとには きらきら ひかる ほしの うみ。{name}は わくわく。',
+        'ちいさな ほしで、まいごの うちゅうじんに であった {name}。',
+        '「いっしょに かえろう！」{name}は そっと てを さしのべました。',
+        'ゆうきを だした {name}に、うちゅうじんは にっこり わらいました。',
+        'たくさんの ほしを めぐって、{name}の たびは まだまだ つづきます。',
+      ],
+    },
+    forest: {
+      catalogTitle:'まほうの もりの ぼうけん', sub:'やさしさが魔法になる、ふしぎな森の物語。',
+      age:'対象年齢 2〜6歳', theme:'#4C8C5A', motif:['🦊','🌳','🍄'],
+      eyebrow:'ふしぎな もりへ ようこそ', titleHtml:'まほうの もりの<br><span class="j-name"></span>',
+      desc:'まほうの森に迷い込んだお子さまが主人公。動物たちを助けるたびに、やさしさが小さな魔法になっていく――心があたたかくなる名入れ絵本です。',
+      pages:[
+        'まほうの もりで、{name}は ないている こぎつねに であいました。',
+        '「どうしたの？」{name}が やさしく こえを かけます。',
+        'なでて あげると、{name}の てのひらが ぽうっと ひかりました。',
+        'ひかりは もりじゅうに ひろがり、おはなが いっせいに さきました。',
+        'どうぶつたちは {name}に「ありがとう」と おれいを いいました。',
+        'やさしさは まほうに なる。{name}は きょうも もりの にんきもの。',
+      ],
+    },
+  };
+  const BOOK_ORDER = ['dino','space','forest'];
 
-    const EPISODE_ORDER = ['lion', 'dolphin', 'owl'];
-    const EPISODES = {
-      lion:    { emoji:'🦁', accent:'#E8A33C', title:'ライオンと 勇気の 冒険',
-                 body:'さばくの むこうで、ライオンが こまっていました。「だいじょうぶ？」と {name}が こえを かけると、ライオンは にっこり わらいました。さあ、{name}と ライオンの ゆうきの たびの はじまりです。' },
-      dolphin: { emoji:'🐬', accent:'#3F9C8E', title:'イルカと 優しさの 海',
-                 body:'きらきら ひかる うみで、{name}は ちいさな イルカに であいました。やさしく なでて あげると、イルカは うれしそうに たかく ジャンプ。ふたりは あおい うみを どこまでも およぎました。' },
-      owl:     { emoji:'🦉', accent:'#7A6E84', title:'フクロウと 知恵の 森',
-                 body:'ふかい もりの おくで、もの知りな フクロウが {name}を まっていました。「なぞなぞを ひとつ、どうかな？」{name}は うーんと あたまを ひねって……さあ、こたえは みつかるかな？' },
-    };
+  const PRICE = { base:3800, hard:1200, gift:500 };
 
-    const COVER_LABEL = { soft:'ソフトカバー', hard:'ハードカバー' };
-    const PRICE = { base: 3800, hard: 1200, gift: 500 };
+  /* ---------- 状態 ---------- */
+  const state = {
+    book:'dino', name:'', gender:'boy', style:'short',
+    skin:'s2', hairColor:'h2', eyeColor:'e1',
+    cover:'midnight', coverType:'soft', gift:false,
+    author:'', message:'', page:0,
+  };
 
-    /* ---------- キャラクターSVG（色はCSS変数で差替え） ---------- */
-    const AVATAR_SVG = `
-      <svg id="avatar" class="avatar is-boy hair-short" style="position:absolute;inset:0;width:100%;height:100%"
-           viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="主人公のイラスト">
-        <g class="hair-back">
-          <path d="M48 104 C42 58 68 40 100 40 C132 40 158 58 152 104 L152 184 Q152 196 140 196 L130 196
-                   Q142 150 132 112 L68 112 Q58 150 70 196 L60 196 Q48 196 48 184 Z" fill="var(--hair)"/>
-        </g>
-        <g class="outfit-boy">
-          <rect x="91" y="132" width="18" height="18" fill="var(--skin)"/>
-          <path d="M60 152 Q100 140 140 152 L150 210 L50 210 Z" fill="#3F9C8E"/>
-          <path d="M84 150 L100 162 L116 150 L116 162 L84 162 Z" fill="#fff" opacity=".85"/>
-        </g>
-        <g class="outfit-girl">
-          <rect x="91" y="132" width="18" height="18" fill="var(--skin)"/>
-          <path d="M62 152 Q100 138 138 152 L160 210 L40 210 Z" fill="#E07A8B"/>
-          <path d="M88 150 Q100 160 112 150 L108 168 L92 168 Z" fill="#fff" opacity=".85"/>
-        </g>
-        <circle cx="56" cy="106" r="9" fill="var(--skin)"/>
-        <circle cx="144" cy="106" r="9" fill="var(--skin)"/>
-        <circle cx="100" cy="100" r="46" fill="var(--skin)"/>
-        <ellipse cx="74" cy="116" rx="8" ry="5" fill="#E07A8B" opacity=".5"/>
-        <ellipse cx="126" cy="116" rx="8" ry="5" fill="#E07A8B" opacity=".5"/>
-        <circle cx="84" cy="100" r="5" fill="#40324F"/>
-        <circle cx="116" cy="100" r="5" fill="#40324F"/>
-        <circle cx="86" cy="98" r="1.6" fill="#fff"/>
-        <circle cx="118" cy="98" r="1.6" fill="#fff"/>
-        <path d="M88 118 Q100 130 112 118" fill="none" stroke="#40324F" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M55 102 C50 56 70 44 100 44 C130 44 150 56 145 102 C140 82 130 72 120 74
-                 C112 60 88 60 80 74 C70 72 60 82 55 102 Z" fill="var(--hair)"/>
-      </svg>`;
+  /* ---------- アバターSVG（class .avatar、色はCSS変数） ---------- */
+  function avatarMarkup(cls){ return `
+    <svg class="${cls}" style="position:absolute;inset:0;width:100%;height:100%"
+         viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="主人公">
+      <g class="hair-back"><path d="M48 104 C42 58 68 40 100 40 C132 40 158 58 152 104 L152 184 Q152 196 140 196 L130 196 Q142 150 132 112 L68 112 Q58 150 70 196 L60 196 Q48 196 48 184 Z" fill="var(--hair)"/></g>
+      <g class="outfit-boy"><rect x="91" y="132" width="18" height="18" fill="var(--skin)"/><path d="M60 152 Q100 140 140 152 L150 210 L50 210 Z" fill="#3F9C8E"/><path d="M84 150 L100 162 L116 150 L116 162 L84 162 Z" fill="#fff" opacity=".85"/></g>
+      <g class="outfit-girl"><rect x="91" y="132" width="18" height="18" fill="var(--skin)"/><path d="M62 152 Q100 138 138 152 L160 210 L40 210 Z" fill="#E07A8B"/><path d="M88 150 Q100 160 112 150 L108 168 L92 168 Z" fill="#fff" opacity=".85"/></g>
+      <circle cx="56" cy="106" r="9" fill="var(--skin)"/><circle cx="144" cy="106" r="9" fill="var(--skin)"/>
+      <circle cx="100" cy="100" r="46" fill="var(--skin)"/>
+      <ellipse cx="74" cy="116" rx="8" ry="5" fill="#E07A8B" opacity=".45"/><ellipse cx="126" cy="116" rx="8" ry="5" fill="#E07A8B" opacity=".45"/>
+      <circle cx="84" cy="100" r="7" fill="var(--eye)"/><circle cx="84" cy="100" r="3.2" fill="#241F2A"/><circle cx="86" cy="98" r="1.5" fill="#fff"/>
+      <circle cx="116" cy="100" r="7" fill="var(--eye)"/><circle cx="116" cy="100" r="3.2" fill="#241F2A"/><circle cx="118" cy="98" r="1.5" fill="#fff"/>
+      <path d="M88 118 Q100 130 112 118" fill="none" stroke="#40324F" stroke-width="3.5" stroke-linecap="round"/>
+      <path class="hair-fringe" d="M55 102 C50 56 70 44 100 44 C130 44 150 56 145 102 C140 82 130 72 120 74 C112 60 88 60 80 74 C70 72 60 82 55 102 Z" fill="var(--hair)"/>
+      <g class="hair-curly" fill="var(--hair)">
+        <circle cx="64" cy="74" r="20"/><circle cx="84" cy="58" r="22"/><circle cx="108" cy="54" r="23"/>
+        <circle cx="132" cy="60" r="21"/><circle cx="146" cy="78" r="18"/><circle cx="55" cy="92" r="15"/><circle cx="150" cy="96" r="14"/>
+      </g>
+    </svg>`; }
+  const AVATAR_SVG = avatarMarkup('avatar is-boy style-short');
+  // 髪型ごとの見本ミニアバター（styleは固定、肌/髪/目/性別は現在の選択を反映）
+  function miniAvatar(st){ return avatarMarkup('avatar avatar-fixed style-'+st+' is-'+state.gender); }
 
-    /* ---------- ページ生成 ---------- */
-    const track = $('track');
-    let totalPages = 0;
+  function skinHex(){ return (SKIN.find(s=>s.v===state.skin)||SKIN[1]).c; }
+  function hairHex(){ return (HAIR.find(h=>h.v===state.hairColor)||HAIR[1]).c; }
+  function eyeHex(){ return (EYE.find(e=>e.v===state.eyeColor)||EYE[0]).c; }
+  function coverHex(){ return COVERMAP[state.cover].c; }
 
-    function selectedEpisodes() {
-      return EPISODE_ORDER.filter((id) => state.episodes[id]);
-    }
+  /* ---------- 表紙の中身 ---------- */
+  function coverContent(){
+    const b = BOOKS[state.book];
+    return `<p class="cover-eyebrow">${b.eyebrow}</p>
+      <h2 class="cover-title font-display j-cover-title">${b.titleHtml}</h2>
+      <div class="cover-medallion">${AVATAR_SVG}</div>
+      <p class="cover-byline">しゅじんこう：<span class="j-name"></span></p>
+      <span class="cover-motif" style="font-size:1.6rem;top:8%;left:8%">${b.motif[0]}</span>
+      <span class="cover-motif" style="font-size:1.2rem;bottom:10%;right:10%">${b.motif[1]}</span>`;
+  }
+  function coverSlideHTML(){ return `<div class="cover-frame cover-bg">${coverContent()}</div>`; }
 
-    function coverSlideHTML() {
-      return `
-      <section class="slide" id="coverSlide">
-        <div class="cover-frame" id="coverFrame">
-          <p class="cover-eyebrow">ものがたり工房</p>
-          <h2 class="cover-title font-display"><span class="j-name"></span><span class="cover-title-tail">の だいぼうけん</span></h2>
-          <div class="cover-medallion" id="coverMedallion">${AVATAR_SVG}</div>
-          <p class="cover-byline">しゅじんこう：<span class="j-name"></span></p>
-        </div>
-      </section>`;
-    }
-
-    function messageSlideHTML() {
-      return `
-      <section class="slide page msg-slide">
+  /* ---------- ページ生成（全ページ確認用） ---------- */
+  const track = $('track');
+  let totalPages = 0;
+  let pageMeta = [];
+  function buildPages(){
+    const b = BOOKS[state.book];
+    let html = `<section class="slide" id="coverSlide">${coverSlideHTML()}</section>`;
+    html += `<section class="slide page msg-slide">
         <span class="msg-quote">&#10077;</span>
         <p class="msg-to font-story"><span class="j-name"></span> へ</p>
         <p class="msg-body font-story j-message"></p>
-        <p class="msg-from font-display">― おくりもの ―</p>
+        <p class="msg-from font-display j-author"></p>
       </section>`;
-    }
+    b.pages.forEach((p,i)=>{
+      const body = p.replace(/\{name\}/g,'<span class="j-name"></span>');
+      html += `<section class="slide page story-slide">
+          <div class="story-medallion">${AVATAR_SVG}</div>
+          <div class="flex-1"><p class="ep-eyebrow text-[11px] tracking-[.2em] text-ink-soft mb-1">${i+1} / ${b.pages.length}</p>
+          <p class="story-body">${body}</p></div>
+        </section>`;
+    });
+    // おわりページ
+    html += `<section class="slide page msg-slide">
+        <div class="cover-medallion" style="width:34%">${AVATAR_SVG}</div>
+        <p class="msg-from font-display" style="margin-top:6%;font-size:clamp(1.1rem,3vw,1.6rem);color:#40324F">おわり</p>
+        <p class="msg-to font-story" style="margin-top:2%"><span class="j-name"></span>の だいぼうけん</p>
+      </section>`;
+    track.innerHTML = html;
+    totalPages = 3 + b.pages.length;
+    pageMeta = ['表紙', 'メッセージ'];
+    b.pages.forEach((_,i)=>pageMeta.push('おはなし '+(i+1)));
+    pageMeta.push('おわり');
+    if(state.page > totalPages-1) state.page = totalPages-1;
+    syncContent();
+    goTo(state.page);
+  }
+  function goTo(i){
+    state.page = Math.max(0, Math.min(i, totalPages-1));
+    track.style.transform = `translateX(-${state.page*100}%)`;
+    updateNav();
+  }
+  function updateNav(){
+    if(!$('pageIndicator')) return;
+    $('pageIndicator').textContent = `${pageMeta[state.page]||''} ・ ${state.page+1} / ${totalPages}`;
+    $('prevBtn').disabled = state.page===0;
+    $('nextBtn').disabled = state.page===totalPages-1;
+    let h=''; for(let i=0;i<totalPages;i++){ h+=`<button data-dot="${i}" class="dot ${i===state.page?'dot-on':''}" aria-label="${i+1}ページ目"></button>`; }
+    $('dots').innerHTML = h;
+  }
 
-    function episodeSlideHTML(id, n) {
-      const e = EPISODES[id];
-      const body = e.body.replace(/\{name\}/g, '<span class="j-name"></span>');
-      return `
-      <section class="slide page story-slide" style="--ep:${e.accent}">
-        <div class="ep-top">
-          <span class="ep-emoji">${e.emoji}</span>
-          <div>
-            <p class="ep-eyebrow">エピソード ${n}</p>
-            <h3 class="ep-title font-display">${e.title}</h3>
-          </div>
+  /* ---------- 内容同期 ---------- */
+  function applyAvatar(av){
+    av.style.setProperty('--skin', skinHex());
+    av.style.setProperty('--hair', hairHex());
+    av.style.setProperty('--eye', eyeHex());
+    av.classList.toggle('is-boy', state.gender==='boy');
+    av.classList.toggle('is-girl', state.gender==='girl');
+    if(!av.classList.contains('avatar-fixed')){
+      av.classList.remove('style-short','style-long','style-curly');
+      av.classList.add('style-'+state.style);
+    }
+  }
+  function syncContent(){
+    const nm = state.name.trim();
+    document.querySelectorAll('.j-name').forEach(el=>{
+      if(nm){ el.textContent=nm; el.classList.remove('name-empty'); }
+      else { el.textContent='なまえ'; el.classList.add('name-empty'); }
+    });
+    document.querySelectorAll('.j-cover-title').forEach(el=>{
+      el.innerHTML = BOOKS[state.book].titleHtml;
+      const s = el.querySelector('.j-name');
+      if(s){ if(nm){s.textContent=nm; s.classList.remove('name-empty');} else {s.textContent='なまえ'; s.classList.add('name-empty');} }
+    });
+    document.querySelectorAll('.j-message').forEach(m=>{
+      if(state.message.trim()){ m.textContent=state.message; m.classList.remove('msg-empty'); }
+      else { m.textContent='ここに あなたの メッセージが はいります。'; m.classList.add('msg-empty'); }
+    });
+    document.querySelectorAll('.j-author').forEach(a=>{
+      a.textContent = state.author.trim() ? '― '+state.author.trim()+' より ―' : '― おくりもの ―';
+    });
+    document.querySelectorAll('.cover-bg').forEach(el=>{
+      el.style.background = 'radial-gradient(circle at 30% 18%,rgba(255,255,255,.28),transparent 55%), '+coverHex();
+    });
+    document.querySelectorAll('.avatar').forEach(applyAvatar);
+  }
+  function popAvatar(){
+    const m = $('avatarBig'); if(!m) return;
+    m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop');
+  }
+
+  /* ---------- スウォッチ描画 ---------- */
+  function renderSwatches(containerId, group, items, shape){
+    const wrap = $(containerId);
+    wrap.innerHTML = items.map(it=>
+      `<button class="swatch ${shape||'rounded-full'} w-9 h-9 border border-black/10"
+         data-group="${group}" data-value="${it.v}" aria-pressed="${state[group]===it.v}"
+         style="background:${it.c}" aria-label="${it.v}"></button>`).join('');
+  }
+  function renderStyleButtons(){
+    const styles=[{v:'short',label:'ショート'},{v:'long',label:'ロング'},{v:'curly',label:'くるくる'}];
+    $('styleButtons').innerHTML = styles.map(s=>
+      `<button class="style-btn rounded-xl border-2 border-paper-2 p-2 flex flex-col items-center gap-1.5"
+               data-group="style" data-value="${s.v}" aria-pressed="${state.style===s.v}">
+         <span class="w-16 h-16 rounded-full overflow-hidden relative border-2 border-white"
+               style="background:radial-gradient(circle at 50% 35%,#FFF6E6,#F3E7D2 70%,#E7D7BD)">${miniAvatar(s.v)}</span>
+         <span class="text-xs font-bold text-ink">${s.label}</span>
+       </button>`).join('');
+  }
+  function renderCoverOptions(){
+    const b = BOOKS[state.book];
+    $('coverOptions').innerHTML = COVERS.map(c=>{
+      const inner = `<p class="cover-eyebrow">${b.eyebrow}</p>
+        <h2 class="cover-title font-display j-cover-title">${b.titleHtml}</h2>
+        <span class="cover-byline">${state.name.trim()||'なまえ'}</span>`;
+      return `<button class="cover-opt" data-group="cover" data-value="${c.key}" aria-pressed="${state.cover===c.key}"
+        style="background:radial-gradient(circle at 30% 18%,rgba(255,255,255,.28),transparent 55%), ${c.c}">
+        <span class="price-tag">${c.price===0?'標準 ¥0':'+¥'+c.price}</span>
+        <span class="cover-check">✓</span>
+        <span class="cover-frame" style="color:#fff;margin:6%;border-color:rgba(255,255,255,.5)">${inner}</span>
+      </button>`;
+    }).join('');
+  }
+
+  /* ---------- カタログ・商品 ---------- */
+  function renderCatalog(){
+    let html = BOOK_ORDER.map(id=>{
+      const b = BOOKS[id];
+      return `<button class="text-left" data-book="${id}">
+        <div class="rounded-xl overflow-hidden aspect-[4/3] flex items-center justify-center relative"
+             style="background:radial-gradient(circle at 30% 18%,rgba(255,255,255,.25),transparent 55%), ${b.theme}">
+          <span class="absolute top-2 left-2 text-2xl">${b.motif[0]}</span>
+          <span class="absolute bottom-2 right-2 text-xl">${b.motif[1]}</span>
+          <span class="font-display text-white font-bold text-center px-2" style="text-shadow:0 1px 4px rgba(0,0,0,.3)">${b.catalogTitle}</span>
         </div>
-        <p class="ep-body font-story">${body}</p>
-        <p class="ep-pageno">― ${n + 2} ―</p>
-      </section>`;
-    }
+        <p class="font-bold text-sm mt-2 leading-snug">${b.catalogTitle}</p>
+        <p class="text-[12px] text-ink-soft leading-snug mt-0.5">${b.age}</p>
+        <p class="font-display font-bold text-marigold-d mt-1">から ¥3,800</p>
+      </button>`;
+    }).join('');
+    html += `<div class="col-span-2 rounded-xl p-4 text-white" style="background:#2C5C4F">
+      <p class="font-display text-lg font-bold">2冊以上の購入で 20%オフ</p>
+      <p class="text-sm mt-1 opacity-90">クーポンコード：MULTI20</p></div>`;
+    $('catalogGrid').innerHTML = html;
+  }
+  function renderProduct(){
+    const b = BOOKS[state.book];
+    $('productCoverSlide').innerHTML = coverSlideHTML();
+    $('productTitle').textContent = b.catalogTitle;
+    $('productAge').textContent = b.age;
+    $('productDesc').textContent = b.desc;
+    syncContent();
+  }
 
-    function buildPages() {
-      const eps = selectedEpisodes();
-      let html = coverSlideHTML() + messageSlideHTML();
-      eps.forEach((id, i) => { html += episodeSlideHTML(id, i + 1); });
-      track.innerHTML = html;
-
-      totalPages = 2 + eps.length;
-      if (state.page > totalPages - 1) state.page = totalPages - 1;
-
-      syncContent();
-      goTo(state.page);
-    }
-
-    /* ---------- 内容の反映 ---------- */
-    function syncContent() {
-      const nameVal = state.name.trim();
-      document.querySelectorAll('.j-name').forEach((el) => {
-        if (nameVal) { el.textContent = nameVal; el.classList.remove('name-empty'); }
-        else { el.textContent = 'なまえ'; el.classList.add('name-empty'); }
-      });
-
-      const m = document.querySelector('.j-message');
-      if (m) {
-        if (state.message.trim()) { m.textContent = state.message; m.classList.remove('msg-empty'); }
-        else { m.textContent = 'ここに あなたの メッセージが はいります。'; m.classList.add('msg-empty'); }
-      }
-
-      const frame = $('coverFrame');
-      if (frame) {
-        frame.style.background =
-          'radial-gradient(circle at 30% 18%, rgba(255,255,255,.28), transparent 55%), ' + COVER[state.cover];
-      }
-
-      const av = $('avatar');
-      if (av) {
-        av.style.setProperty('--skin', SKIN[state.skin]);
-        av.style.setProperty('--hair', HAIRC[state.hairColor]);
-        av.classList.toggle('is-boy',  state.gender === 'boy');
-        av.classList.toggle('is-girl', state.gender === 'girl');
-        av.classList.toggle('hair-short', state.hair === 'short');
-        av.classList.toggle('hair-long',  state.hair === 'long');
-      }
-    }
-
-    function popAvatar() {
-      const med = $('coverMedallion');
-      if (!med) return;
-      med.classList.remove('pop');
-      void med.offsetWidth;
-      med.classList.add('pop');
-    }
-
-    /* ---------- ナビゲーション ---------- */
-    function goTo(i) {
-      state.page = Math.max(0, Math.min(i, totalPages - 1));
-      track.style.transform = `translateX(-${state.page * 100}%)`;
-      updateNav();
-    }
-
-    function updateNav() {
-      $('pageIndicator').textContent = `${state.page + 1} / ${totalPages} ページ`;
-      $('prevBtn').disabled = state.page === 0;
-      $('nextBtn').disabled = state.page === totalPages - 1;
-
-      const dots = $('dots');
-      let h = '';
-      for (let i = 0; i < totalPages; i++) {
-        h += `<button type="button" data-dot="${i}" aria-label="${i + 1}ページ目へ"
-                 class="dot ${i === state.page ? 'dot-on' : ''}"></button>`;
-      }
-      dots.innerHTML = h;
-    }
-
-    /* ---------- 価格 ---------- */
-    function updatePrice() {
-      let total = PRICE.base
-        + (state.coverType === 'hard' ? PRICE.hard : 0)
-        + (state.gift ? PRICE.gift : 0);
-      $('totalPrice').textContent = '¥' + total.toLocaleString('ja-JP');
-      $('priceNote').textContent =
-        `${COVER_LABEL[state.coverType]}・ラッピング${state.gift ? 'あり' : 'なし'}`;
-    }
-
-    /* ---------- イベント ---------- */
-    // 単一選択グループ（性別・髪型・肌・髪色・表紙・装丁）
-    document.querySelectorAll('[data-group]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const g = btn.dataset.group, v = btn.dataset.value;
-        state[g] = v;
-        document.querySelectorAll(`[data-group="${g}"]`).forEach((b) => {
-          b.setAttribute('aria-pressed', b === btn);
-        });
-        if (g === 'coverType') {
-          updatePrice();
-        } else {
-          syncContent();
-          if (g !== 'cover') popAvatar();
-        }
-      });
-    });
-
-    // エピソード（複数選択）
-    document.querySelectorAll('[data-ep]').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        const id = chip.dataset.ep;
-        state.episodes[id] = !state.episodes[id];
-        chip.setAttribute('aria-pressed', state.episodes[id]);
-        buildPages();
-      });
-    });
-
-    // ギフトラッピング（トグル）
-    const giftBtn = document.querySelector('[data-toggle="gift"]');
-    giftBtn.addEventListener('click', () => {
-      state.gift = !state.gift;
-      giftBtn.setAttribute('aria-pressed', state.gift);
-      updatePrice();
-    });
-
-    // テキスト入力（1文字ごと）
-    $('nameInput').addEventListener('input', (e) => { state.name = e.target.value; syncContent(); });
-    $('msgInput').addEventListener('input', (e) => { state.message = e.target.value; syncContent(); });
-
-    // ナビゲーションボタン
-    $('prevBtn').addEventListener('click', () => goTo(state.page - 1));
-    $('nextBtn').addEventListener('click', () => goTo(state.page + 1));
-
-    // ドット
-    $('dots').addEventListener('click', (e) => {
-      const d = e.target.closest('[data-dot]');
-      if (d) goTo(parseInt(d.dataset.dot, 10));
-    });
-
-    // キーボード左右
-    $('viewport').addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft')  { goTo(state.page - 1); e.preventDefault(); }
-      if (e.key === 'ArrowRight') { goTo(state.page + 1); e.preventDefault(); }
-    });
-
-    // 購入（モック）
-    $('buyButton').addEventListener('click', () => {
-      const name = state.name.trim() || '（未入力）';
-      const eps = selectedEpisodes().map((id) => EPISODES[id].title).join('・') || 'なし';
-      const total = $('totalPrice').textContent;
-      alert(
-        '（デモ用）決済処理へ進みます\n本番環境ではここに決済システムが連携されます。\n\n' +
-        '― ご注文内容 ―\n' +
-        '主人公：' + name + '\n' +
-        'エピソード：' + eps + '\n' +
-        '仕様：' + COVER_LABEL[state.coverType] + '／ラッピング' + (state.gift ? 'あり' : 'なし') + '\n' +
-        '合計：' + total + '（税込）'
-      );
-    });
-
-    /* ---------- 初期化 ---------- */
-    buildPages();
+  /* ---------- 価格 ---------- */
+  function coverUpcharge(){ return COVERMAP[state.cover].price; }
+  function updatePrice(){
+    const cov = coverUpcharge();
+    const hard = state.coverType==='hard'?PRICE.hard:0;
+    const gift = state.gift?PRICE.gift:0;
+    const total = PRICE.base + cov + hard + gift;
+    if($('rowCover')) $('rowCover').lastElementChild.textContent = '¥'+cov.toLocaleString('ja-JP');
+    if($('rowHard'))  $('rowHard').lastElementChild.textContent  = '¥'+hard.toLocaleString('ja-JP');
+    if($('rowGift'))  $('rowGift').lastElementChild.textContent  = '¥'+gift.toLocaleString('ja-JP');
+    if($('totalPrice')) $('totalPrice').textContent = '¥'+total.toLocaleString('ja-JP');
+    return total;
+  }
+  function renderConfirm(){
+    const b = BOOKS[state.book];
+    $('confirmCoverSlide').innerHTML = coverSlideHTML();
+    $('confirmTitle').textContent = b.catalogTitle;
+    const styleLabel = {short:'ショート',long:'ロング',curly:'くるくる'}[state.style];
+    $('confirmSummary').innerHTML =
+      `主人公：<b>${state.name.trim()||'（未入力）'}</b><br>`+
+      `${state.gender==='boy'?'男の子':'女の子'}・${styleLabel}<br>`+
+      `表紙：${COVERMAP[state.cover].label}<br>`+
+      `作者：${state.author.trim()||'（未入力）'}`;
+    syncContent();
     updatePrice();
-  })();
-  </script>
+  }
+
+  /* ---------- 画面遷移 ---------- */
+  const STEPS = ['name','gender','avatar','cover','review','author','message'];
+  const NEXT = { product:'name', name:'gender', gender:'avatar', avatar:'cover', cover:'review', review:'author', author:'message', message:'confirm' };
+  const BACK = { product:'catalog', name:'product', gender:'name', avatar:'gender', cover:'avatar', review:'cover', author:'review', message:'author', confirm:'message' };
+  let current = 'catalog';
+
+  function goScreen(id){
+    current = id;
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $('screen-'+id).classList.add('active');
+    $('screenArea').scrollTop = 0;
+
+    // ウィザードバー & 進捗
+    const stepIdx = STEPS.indexOf(id);
+    if(stepIdx>=0){
+      $('wizardBar').classList.remove('hidden');
+      $('stepLabel').textContent = `ステップ ${stepIdx+1} / ${STEPS.length}`;
+      $('progressFill').style.width = Math.round((stepIdx+1)/STEPS.length*100)+'%';
+    } else if(id==='confirm'){
+      $('wizardBar').classList.remove('hidden');
+      $('stepLabel').textContent = 'ご注文の確認';
+      $('progressFill').style.width = '100%';
+    } else {
+      $('wizardBar').classList.add('hidden');
+    }
+
+    // フッターCTA
+    const footer = $('actionbar'), cta = $('ctaButton');
+    if(id==='catalog'){ footer.classList.add('hidden'); }
+    else { footer.classList.remove('hidden'); }
+    if(id==='product') cta.textContent='今すぐパーソナライズ';
+    else if(id==='confirm') cta.textContent='この内容で購入する';
+    else cta.textContent='次へ進む';
+
+    // 名前未入力なら名前ステップの「次へ」を抑止
+    if(id==='name'){ cta.disabled = !state.name.trim(); cta.classList.toggle('opacity-40', !state.name.trim()); }
+    else { cta.disabled=false; cta.classList.remove('opacity-40'); }
+
+    // 画面別の初期化
+    if(id==='product') renderProduct();
+    if(id==='cover'){ renderCoverOptions(); syncContent(); }
+    if(id==='review') buildPages();
+    if(id==='confirm') renderConfirm();
+    syncContent();
+  }
+
+  /* ---------- イベント ---------- */
+  // カタログ → 商品
+  $('catalogGrid').addEventListener('click', e=>{
+    const b = e.target.closest('[data-book]'); if(!b) return;
+    state.book = b.dataset.book; goScreen('product');
+  });
+  // ホーム/もどる
+  $('homeBtn').addEventListener('click', ()=>goScreen('catalog'));
+  $('cancelLink').addEventListener('click', ()=>{ goScreen(BACK[current]||'catalog'); });
+
+  // CTA（次へ／パーソナライズ／購入）
+  $('ctaButton').addEventListener('click', ()=>{
+    if(current==='confirm'){
+      const total = updatePrice();
+      alert('（デモ用）決済処理へ進みます\n本番環境ではここに決済システムが連携されます。\n\n'+
+        '― ご注文内容 ―\n主人公：'+(state.name.trim()||'（未入力）')+'\n絵本：'+BOOKS[state.book].catalogTitle+
+        '\n表紙：'+COVERMAP[state.cover].label+'\n仕様：'+(state.coverType==='hard'?'ハードカバー':'ソフトカバー')+
+        '／ラッピング'+(state.gift?'あり':'なし')+'\n合計：¥'+total.toLocaleString('ja-JP')+'（税込）');
+      return;
+    }
+    const nx = NEXT[current]; if(nx) goScreen(nx);
+  });
+
+  // 単一選択グループ（gender / style / skin / hairColor / eyeColor / cover / coverType）
+  document.addEventListener('click', e=>{
+    const btn = e.target.closest('[data-group]'); if(!btn) return;
+    const g = btn.dataset.group, v = btn.dataset.value;
+    state[g] = v;
+    document.querySelectorAll(`[data-group="${g}"]`).forEach(b=>b.setAttribute('aria-pressed', b===btn));
+    if(g==='cover'){ syncContent(); updatePrice(); }
+    else if(g==='coverType'){ updatePrice(); }
+    else { syncContent(); popAvatar(); }
+  });
+  // ギフト
+  document.addEventListener('click', e=>{
+    const gb = e.target.closest('[data-toggle="gift"]'); if(!gb) return;
+    state.gift = !state.gift; gb.setAttribute('aria-pressed', state.gift); updatePrice();
+  });
+  // ドット
+  document.addEventListener('click', e=>{
+    const d = e.target.closest('[data-dot]'); if(d) goTo(parseInt(d.dataset.dot,10));
+  });
+
+  // テキスト入力
+  $('nameInput').addEventListener('input', e=>{
+    state.name = e.target.value; syncContent();
+    const ok = !!state.name.trim();
+    $('ctaButton').disabled = !ok; $('ctaButton').classList.toggle('opacity-40', !ok);
+  });
+  $('authorInput').addEventListener('input', e=>{ state.author = e.target.value; syncContent(); });
+  $('msgInput').addEventListener('input', e=>{
+    state.message = e.target.value; $('msgRemain').textContent = 200 - e.target.value.length; syncContent();
+  });
+  // 名前ステップの「○○サウルス」末尾
+  $('nameInput').addEventListener('input', ()=>{ $('nameTail').textContent = nameTailText(); });
+  function nameTailText(){
+    const t = BOOKS[state.book].titleHtml.replace(/<[^>]+>/g,'').replace('なまえ','');
+    return t; // タイトルから可変名前を除いた残り（例：サウルス）
+  }
+  // レビューのキーボード操作
+  // レビューの前へ/次へ・キーボード操作
+  $('prevBtn').addEventListener('click', ()=>goTo(state.page-1));
+  $('nextBtn').addEventListener('click', ()=>goTo(state.page+1));
+  $('viewport').addEventListener('keydown', e=>{
+    if(e.key==='ArrowLeft'){ goTo(state.page-1); e.preventDefault(); }
+    if(e.key==='ArrowRight'){ goTo(state.page+1); e.preventDefault(); }
+  });
+  $('menuBtn').addEventListener('click', ()=>goScreen('catalog'));
+
+  /* ---------- 初期化 ---------- */
+  renderCatalog();
+  $('avatarBig').innerHTML = AVATAR_SVG;
+  renderStyleButtons();
+  renderSwatches('skinSwatches','skin',SKIN);
+  renderSwatches('hairSwatches','hairColor',HAIR);
+  renderSwatches('eyeSwatches','eyeColor',EYE);
+  $('nameTail').textContent = nameTailText();
+  goScreen('catalog');
+})();
+</script>
 </body>
 </html>
